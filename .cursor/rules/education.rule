@@ -1,0 +1,12 @@
+{
+  "description": "Rules for the 'Learn to Cube' section based on badmephisto content.",
+  "glob": "**/education/**/*, **/tutorials/**/*",
+  "context": [
+    "@file:./rules/general.rule"
+  ],
+  "preferences": {
+    "content-source": "badmephisto-videos",
+    "animation": "step-by-step",
+    "interactive": "true"
+  }
+} 

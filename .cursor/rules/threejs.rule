@@ -1,0 +1,15 @@
+{
+  "description": "Rules for Three.js implementation of the 3D cube and backgrounds.",
+  "glob": "**/threejs/**/*, **/*.js(threejs*)",
+  "context": [
+    "@file:./rules/general.rule"
+  ],
+  "preferences": {
+    "rendering": "webgl2",
+    "animation": "smooth-transitions",
+    "optimization": "lod-techniques"
+  },
+  "examples": [
+    "import * as THREE from 'three';\nconst scene = new THREE.Scene();\nconst cube = new THREE.Mesh(geometry, material);"
+  ]
+} 

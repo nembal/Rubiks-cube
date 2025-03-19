@@ -1,0 +1,15 @@
+{
+  "description": "Rules for UI components using Tailwind CSS and ShadCN.",
+  "glob": "**/*.jsx, **/*.tsx, **/components/**/*",
+  "context": [
+    "@file:./rules/general.rule"
+  ],
+  "preferences": {
+    "style-guide": "consistent-utility-classes",
+    "component-reuse": "prioritize-shadcn",
+    "responsiveness": "mobile-first"
+  },
+  "examples": [
+    "import { Button } from '@/components/ui/button';\n<Button className='bg-blue-500 text-white'>Solve</Button>"
+  ]
+} 

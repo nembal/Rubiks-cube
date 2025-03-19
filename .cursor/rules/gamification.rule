@@ -1,0 +1,12 @@
+{
+  "description": "Rules for gamification elements like leaderboards and radio.",
+  "glob": "**/gamification/**/*",
+  "context": [
+    "@file:./rules/general.rule"
+  ],
+  "preferences": {
+    "leaderboard": "realtime-updates",
+    "radio": "gta-style-stations",
+    "rewards": "achievement-based"
+  }
+} 

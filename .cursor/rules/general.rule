@@ -1,0 +1,16 @@
+{
+  "description": "Default rules for the Rubik's Cube Learning Application project.",
+  "glob": "**/*",
+  "context": [
+    "@file:./rules/ui.rule",
+    "@file:./rules/threejs.rule",
+    "@file:./rules/education.rule",
+    "@file:./rules/gamification.rule"
+  ],
+  "preferences": {
+    "framework": "nextjs",
+    "styling": "tailwindcss",
+    "components": "shadcn",
+    "performance": "optimize-for-60fps"
+  }
+} 
