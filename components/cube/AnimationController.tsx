@@ -80,16 +80,16 @@ class AnimationController {
       this.pivot.attach(mesh);
       
       // Store reference for detaching later
-      (mesh as any).originalParent = originalParent;
-      (mesh as any).originalPosition = originalPosition;
+      mesh.userData.originalParent = originalParent;
+      mesh.userData.originalPosition = originalPosition;
     });
   }
   
   // Detach cubie meshes from pivot after animation
   private detachCubiesFromPivot(): void {
     this.cubieMeshes.forEach(mesh => {
-      const originalParent = (mesh as any).originalParent;
-      const originalPosition = (mesh as any).originalPosition;
+      const originalParent = mesh.userData.originalParent as Object3D;
+      const originalPosition = mesh.userData.originalPosition as Vector3;
       
       if (originalParent) {
         // Detach from pivot and reattach to original parent
@@ -150,38 +150,35 @@ class AnimationController {
   
   // Complete the animation
   private completeAnimation(): void {
-    // Update cubie positions in the cube state
+    // Update cubie positions in the model
+    const axis = this.getAxisFromVector();
+    this.cubeManager.updateCubiePositions(this.cubies, axis, this.targetAngle);
+    
+    // Detach cubies from pivot
     this.detachCubiesFromPivot();
     
-    // Determine the rotation matrix and update cubies
-    const angle = this.targetAngle;
-    const axis = this.getAxisFromVector();
-    
-    // Update cubies in the cube manager
-    this.cubeManager.updateCubiePositions(this.cubies, axis, angle);
-    
-    // Reset animation state
-    this.reset();
+    // Mark animation as complete
+    this.animating = false;
     
     // Re-highlight the selected cubie based on cursor position
     // This ensures the highlight "jumps back" to the cursor position
     // rather than following the rotated cubie
     this.cubeRenderer.highlightSelected();
     
-    // Execute callback
+    // Call the completion callback
     if (this.onAnimationComplete) {
       this.onAnimationComplete();
     }
   }
   
-  // Convert rotation axis vector to axis type
+  // Get the axis from the rotation vector
   private getAxisFromVector(): Axis {
     if (this.rotationAxis.x) return 'x';
     if (this.rotationAxis.y) return 'y';
     return 'z';
   }
   
-  // Get the pivot object for the scene
+  // Get the pivot object
   getPivot(): Object3D {
     return this.pivot;
   }

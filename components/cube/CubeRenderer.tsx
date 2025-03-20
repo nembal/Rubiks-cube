@@ -3,15 +3,10 @@ import {
   BoxGeometry, 
   Mesh, 
   MeshLambertMaterial,
-  MeshBasicMaterial,
-  Vector3, 
-  Group,
-  EdgesGeometry,
-  LineSegments,
-  LineBasicMaterial
+  Group
 } from 'three';
-import CubeManager, { Cubie, Face } from './CubeManager';
-import { HighlightMode, HighlightOptions } from './RubiksCube';
+import CubeManager, { Cubie } from './CubeManager';
+import { HighlightOptions } from './RubiksCube';
 
 class CubeRenderer {
   private cubeManager: CubeManager;
@@ -20,11 +15,9 @@ class CubeRenderer {
   private cubeGroup: Group;
   private spacing: number = 1.05; // Spacing between cubies
   private selectedMaterial: MeshLambertMaterial;
-  private edgeMaterial: LineBasicMaterial = new LineBasicMaterial({ color: 0xff00ff });
   private defaultMaterials: Record<string, MeshLambertMaterial>;
   private highlightOptions: HighlightOptions;
-  private highlightedObjects: (Mesh | LineSegments)[] = []; // Track highlighted objects for removal
-  private edgesMeshes: Map<Mesh, LineSegments> = new Map();
+  private highlightedObjects: Mesh[] = []; // Track highlighted objects for removal
   
   constructor(cubeManager: CubeManager, scene: Scene, highlightOptions: HighlightOptions) {
     this.cubeManager = cubeManager;
@@ -72,12 +65,6 @@ class CubeRenderer {
     this.selectedMaterial.color.set(color);
     this.selectedMaterial.opacity = opacity;
     this.selectedMaterial.transparent = opacity < 1;
-    
-    // Create edge material for outlining
-    this.edgeMaterial = new LineBasicMaterial({ 
-      color: color,
-      linewidth: 2 
-    });
   }
   
   // Create mesh for each cubie
@@ -114,28 +101,14 @@ class CubeRenderer {
       this.cubeMeshes.push(mesh);
       
       // Associate mesh with cubie for easier reference
-      (mesh as any).cubie = cubie;
-      
-      // Create edges geometry for edge highlighting
-      const edgesGeometry = new EdgesGeometry(geometry);
-      const edgesMaterial = new LineBasicMaterial({ 
-        color: parseInt(this.highlightOptions.color.replace('#', '0x')),
-        transparent: true,
-        opacity: this.highlightOptions.opacity
-      });
-      const edges = new LineSegments(edgesGeometry, edgesMaterial);
-      mesh.add(edges);
-      edges.visible = false;
-      
-      // Store edges for later reference
-      this.edgesMeshes.set(mesh, edges);
+      mesh.userData.cubie = cubie;
     });
   }
   
   // Update mesh positions based on cube state
   updatePositions(): void {
     this.cubeMeshes.forEach(mesh => {
-      const cubie = (mesh as any).cubie as Cubie;
+      const cubie = mesh.userData.cubie as Cubie;
       if (cubie) {
         const pos = cubie.rubikPosition.clone().multiplyScalar(this.spacing);
         mesh.position.copy(pos);
@@ -178,7 +151,7 @@ class CubeRenderer {
     }
     
     return this.cubeMeshes.filter(mesh => {
-      const cubie = (mesh as any).cubie as Cubie;
+      const cubie = mesh.userData.cubie as Cubie;
       if (!cubie) return false;
       
       switch (axis) {
@@ -189,29 +162,7 @@ class CubeRenderer {
     });
   }
   
-  // Get edge cubies on the current face (exclude center)
-  private getEdgeCubiesOnCurrentFace(): Mesh[] {
-    const state = this.cubeManager.getState();
-    const currentFace = state.currentFace;
-    const faceCubies = this.getCubiesOnCurrentFace();
-    
-    return faceCubies.filter(mesh => {
-      const cubie = (mesh as any).cubie as Cubie;
-      if (!cubie) return false;
-      
-      // Count how many coordinates are 0 (center of a face)
-      const zeroCount = [
-        Math.abs(cubie.rubikPosition.x) < 0.1 ? 1 : 0,
-        Math.abs(cubie.rubikPosition.y) < 0.1 ? 1 : 0,
-        Math.abs(cubie.rubikPosition.z) < 0.1 ? 1 : 0,
-      ].reduce((a, b) => a + b, 0);
-      
-      // Edge cubies have at most one 0 coordinate
-      return zeroCount < 2;
-    });
-  }
-  
-  // Highlight selected cubie or face based on mode
+  // Highlight selected cubie
   highlightSelected(): void {
     // Remove previous highlights
     this.resetHighlights();
@@ -220,20 +171,8 @@ class CubeRenderer {
     const selectedCubie = this.cubeManager.getSelectedCubie();
     if (!selectedCubie) return;
     
-    switch (this.highlightOptions.mode) {
-      case 'cubicle':
-        this.highlightCubicle(selectedCubie);
-        break;
-      case 'cubicle-edges':
-        this.highlightCubicleEdges(selectedCubie);
-        break;
-      case 'face':
-        this.highlightFace();
-        break;
-      case 'face-edges':
-        this.highlightFaceEdges();
-        break;
-    }
+    // Highlight the cubicle
+    this.highlightCubicle(selectedCubie);
   }
   
   // Highlight the entire cubicle
@@ -242,7 +181,7 @@ class CubeRenderer {
     
     if (selectedMesh) {
       // Store original materials for when we deselect
-      (selectedMesh as any).originalMaterials = selectedMesh.material;
+      selectedMesh.userData.originalMaterials = selectedMesh.material;
       
       // Create new materials array filled with highlight material
       const highlightMaterials = Array(6).fill(this.selectedMaterial);
@@ -253,68 +192,14 @@ class CubeRenderer {
     }
   }
   
-  // Highlight just the edges of the cubicle
-  private highlightCubicleEdges(selectedCubie: Cubie): void {
-    const selectedMesh = this.findMeshForCubie(selectedCubie);
-    
-    if (selectedMesh) {
-      // Get the edges LineSegments
-      const edges = this.edgesMeshes.get(selectedMesh);
-      if (edges) {
-        // Update the edge material color and opacity
-        (edges.material as LineBasicMaterial).color.set(this.highlightOptions.color);
-        (edges.material as LineBasicMaterial).opacity = this.highlightOptions.opacity;
-        // Make edges visible
-        edges.visible = true;
-      }
-    }
-  }
-  
-  // Highlight the entire face
-  private highlightFace(): void {
-    const faceCubies = this.getCubiesOnCurrentFace();
-    
-    faceCubies.forEach(mesh => {
-      // Store original materials
-      (mesh as any).originalMaterials = mesh.material;
-      
-      // Create new materials array filled with highlight material
-      const highlightMaterials = Array(6).fill(this.selectedMaterial);
-      mesh.material = highlightMaterials;
-      
-      // Add to highlighted objects
-      this.highlightedObjects.push(mesh);
-    });
-  }
-  
-  // Highlight the edges of the face
-  private highlightFaceEdges(): void {
-    const edgeCubies = this.getEdgeCubiesOnCurrentFace();
-    
-    edgeCubies.forEach(mesh => {
-      // Store original materials
-      (mesh as any).originalMaterials = mesh.material;
-      
-      // Create new materials array filled with highlight material
-      const highlightMaterials = Array(6).fill(this.selectedMaterial);
-      mesh.material = highlightMaterials;
-      
-      // Add to highlighted objects
-      this.highlightedObjects.push(mesh);
-    });
-  }
-  
-  // Find mesh corresponding to a cubie
+  // Find the mesh for a given cubie
   private findMeshForCubie(cubie: Cubie): Mesh | undefined {
     return this.cubeMeshes.find(mesh => {
-      const meshCubie = (mesh as any).cubie as Cubie;
-      if (!meshCubie) return false;
-      
-      return (
+      const meshCubie = mesh.userData.cubie as Cubie;
+      return meshCubie && 
         Math.abs(meshCubie.rubikPosition.x - cubie.rubikPosition.x) < 0.1 &&
         Math.abs(meshCubie.rubikPosition.y - cubie.rubikPosition.y) < 0.1 &&
-        Math.abs(meshCubie.rubikPosition.z - cubie.rubikPosition.z) < 0.1
-      );
+        Math.abs(meshCubie.rubikPosition.z - cubie.rubikPosition.z) < 0.1;
     });
   }
   
@@ -322,35 +207,20 @@ class CubeRenderer {
   resetHighlights(): void {
     // Restore original materials for all meshes
     this.cubeMeshes.forEach(mesh => {
-      if ((mesh as any).originalMaterials) {
-        mesh.material = (mesh as any).originalMaterials;
-        delete (mesh as any).originalMaterials;
-      }
-      
-      // Hide edges
-      const edges = this.edgesMeshes.get(mesh);
-      if (edges) {
-        edges.visible = false;
+      if (mesh.userData.originalMaterials) {
+        mesh.material = mesh.userData.originalMaterials;
+        delete mesh.userData.originalMaterials;
       }
     });
     
-    // Remove any added edge highlights
-    this.highlightedObjects.forEach(obj => {
-      if (obj instanceof LineSegments) {
-        this.cubeGroup.remove(obj);
-        obj.geometry.dispose();
-        (obj.material as LineBasicMaterial).dispose();
-      }
-    });
-    
-    // Clear the highlighted objects array
+    // Clear tracking
     this.highlightedObjects = [];
   }
   
-  // Get cubie meshes for a specific layer
+  // Get all cubies in a layer
   getCubieMeshesInLayer(axis: string, value: number): Mesh[] {
     return this.cubeMeshes.filter(mesh => {
-      const cubie = (mesh as any).cubie as Cubie;
+      const cubie = mesh.userData.cubie as Cubie;
       if (!cubie) return false;
       
       switch (axis) {
@@ -362,9 +232,9 @@ class CubeRenderer {
     });
   }
   
-  // Get all cubie meshes
+  // Return all cube meshes
   getCubieMeshes(): Mesh[] {
-    return [...this.cubeMeshes];
+    return this.cubeMeshes;
   }
 }
 

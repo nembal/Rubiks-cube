@@ -18,8 +18,8 @@ import CubeFace from './CubeFace';
 import AnimationController from './AnimationController';
 import InputHandler from './InputHandler';
 
-// Define highlight mode options
-export type HighlightMode = 'cubicle' | 'cubicle-edges' | 'face' | 'face-edges';
+// Define highlight mode options - only cubicle mode now
+export type HighlightMode = 'cubicle';
 
 // UI variables for highlighting
 export interface HighlightOptions {
@@ -116,22 +116,12 @@ const CubeScene: React.FC<{ highlightOptions: HighlightOptions }> = ({ highlight
 
 // Main RubiksCube component
 const RubiksCube: React.FC = () => {
-  // Default highlight options
-  const [highlightOptions, setHighlightOptions] = useState<HighlightOptions>({
-    mode: 'cubicle', // Default mode
+  // Default highlight options - only cubicle mode
+  const [highlightOptions] = useState<HighlightOptions>({
+    mode: 'cubicle', // Only available mode
     color: '#ff00ff', // Pink color
     opacity: 1.0, // Fully opaque
   });
-  
-  // Function to change highlight mode (could be connected to UI controls)
-  const changeHighlightMode = (mode: HighlightMode) => {
-    setHighlightOptions(prev => ({
-      ...prev,
-      mode,
-      // Adjust opacity based on mode (face modes look better with some transparency)
-      opacity: mode.startsWith('face') ? 0.5 : 1.0
-    }));
-  };
   
   return (
     <div className="w-full aspect-square">
@@ -139,33 +129,7 @@ const RubiksCube: React.FC = () => {
         <CubeScene highlightOptions={highlightOptions} />
       </Canvas>
       
-      {/* Optional UI for changing highlight mode */}
-      <div className="flex justify-center mt-4 gap-2">
-        <button 
-          className={`px-3 py-1 rounded ${highlightOptions.mode === 'cubicle' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => changeHighlightMode('cubicle')}
-        >
-          Cubicle
-        </button>
-        <button 
-          className={`px-3 py-1 rounded ${highlightOptions.mode === 'cubicle-edges' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => changeHighlightMode('cubicle-edges')}
-        >
-          Edges
-        </button>
-        <button 
-          className={`px-3 py-1 rounded ${highlightOptions.mode === 'face' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => changeHighlightMode('face')}
-        >
-          Face
-        </button>
-        <button 
-          className={`px-3 py-1 rounded ${highlightOptions.mode === 'face-edges' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => changeHighlightMode('face-edges')}
-        >
-          Face Edges
-        </button>
-      </div>
+      {/* No UI buttons needed since there's only one mode */}
     </div>
   );
 };
