@@ -187,6 +187,17 @@ class CubeManager {
     
     this.state.cursor = { row, col };
   }
+  
+  // Set cursor position directly
+  setCursorPosition(row: number, col: number): void {
+    if (this.state.isAnimating) return;
+    
+    // Ensure values are within bounds
+    row = Math.max(0, Math.min(2, row));
+    col = Math.max(0, Math.min(2, col));
+    
+    this.state.cursor = { row, col };
+  }
 
   // Switch to the next face
   switchFace(): void {

@@ -2,6 +2,7 @@ import CubeManager, { CubeState, Face, Axis } from './CubeManager';
 import CubeFace from './CubeFace';
 import AnimationController from './AnimationController';
 import CubeRenderer from './CubeRenderer';
+import { Camera } from 'three';
 
 class InputHandler {
   private cubeManager: CubeManager;
@@ -9,6 +10,7 @@ class InputHandler {
   private animationController: AnimationController;
   private cubeRenderer: CubeRenderer;
   private keydownListener: (event: KeyboardEvent) => void;
+  private camera: Camera | undefined;
   
   constructor(
     cubeManager: CubeManager, 
@@ -22,6 +24,11 @@ class InputHandler {
     this.cubeRenderer = cubeRenderer;
     
     this.keydownListener = this.handleKeyDown.bind(this);
+  }
+  
+  // Set the camera reference for viewer-relative controls
+  setCamera(camera: Camera): void {
+    this.camera = camera;
   }
   
   // Start listening for keyboard events
@@ -81,9 +88,28 @@ class InputHandler {
     this.cubeRenderer.highlightSelected();
   }
   
-  // Move the cursor on the current face
+  // Move the cursor on the current face with viewer-relative controls for top/bottom
   private moveCursor(direction: 'up' | 'down' | 'left' | 'right', state: CubeState): void {
-    this.cubeManager.moveCursor(direction);
+    const { currentFace, cursor } = state;
+    const { row, col } = cursor;
+    
+    // Check if we need viewer-relative controls (top/bottom face)
+    if ((currentFace === 'top' || currentFace === 'bottom') && this.camera) {
+      // Use viewer-relative mapping for top/bottom faces
+      const newPosition = this.cubeFace.mapCursorMovementToGrid(
+        direction,
+        this.camera,
+        currentFace,
+        row,
+        col
+      );
+      
+      // Update cursor position
+      this.cubeManager.setCursorPosition(newPosition.row, newPosition.col);
+    } else {
+      // Use standard movement for vertical faces
+      this.cubeManager.moveCursor(direction);
+    }
   }
   
   // Switch to the next face
@@ -91,16 +117,26 @@ class InputHandler {
     this.cubeManager.switchFace();
   }
   
-  // Rotate a layer based on arrow key and current state
+  // Rotate a layer based on arrow key and current state, using viewer-relative controls
   private rotateLayer(arrow: 'up' | 'down' | 'left' | 'right', state: CubeState): void {
     const { currentFace, cursor } = state;
     const { row, col } = cursor;
     
-    // Determine which layer to rotate and in which direction
-    const { axis, direction } = this.cubeFace.mapArrowToRotation(arrow, currentFace);
+    // Determine which layer to rotate and in which direction, using camera for top/bottom
+    const { axis, direction } = this.cubeFace.mapArrowToRotation(
+      arrow, 
+      currentFace,
+      (currentFace === 'top' || currentFace === 'bottom') ? this.camera : undefined
+    );
     
     // Determine the value (coordinate) of the layer to rotate
-    const value = this.cubeFace.getLayerValue(arrow, row, col, currentFace);
+    const value = this.cubeFace.getLayerValue(
+      arrow, 
+      row, 
+      col, 
+      currentFace,
+      (currentFace === 'top' || currentFace === 'bottom') ? this.camera : undefined
+    );
     
     // Get cubies in the layer
     const twistResult = this.cubeManager.twistLayer(axis, value, direction);

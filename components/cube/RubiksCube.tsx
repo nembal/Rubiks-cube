@@ -50,6 +50,9 @@ const CubeScene: React.FC<{ highlightOptions: HighlightOptions }> = ({ highlight
     const animationController = new AnimationController(cubeManager, cubeRenderer);
     const inputHandler = new InputHandler(cubeManager, cubeFace, animationController, cubeRenderer);
     
+    // Set the camera reference for viewer-relative controls
+    inputHandler.setCamera(camera);
+    
     // Add the animation pivot to the scene
     scene.add(animationController.getPivot());
     
@@ -72,7 +75,14 @@ const CubeScene: React.FC<{ highlightOptions: HighlightOptions }> = ({ highlight
         inputHandlerRef.current.stopListening();
       }
     };
-  }, [scene, highlightOptions]);
+  }, [scene, highlightOptions, camera]);
+  
+  // Update camera reference when it changes
+  useEffect(() => {
+    if (inputHandlerRef.current) {
+      inputHandlerRef.current.setCamera(camera);
+    }
+  }, [camera]);
   
   // Update highlight options when they change
   useEffect(() => {
