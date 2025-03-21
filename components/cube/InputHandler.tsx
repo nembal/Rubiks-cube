@@ -1,4 +1,4 @@
-import CubeManager, { CubeState, Face, Axis } from './CubeManager';
+import CubeManager, { CubeState, Face } from './CubeManager';
 import CubeFace from './CubeFace';
 import AnimationController from './AnimationController';
 import CubeRenderer from './CubeRenderer';
@@ -137,13 +137,15 @@ class InputHandler {
   }
   
   // Handle mouse move event for cube rotation
-  private handleMouseMove(event: MouseEvent): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private handleMouseMove(_event: MouseEvent): void {
     // Disable mouse interaction with cube faces for now
     return;
   }
   
   // Handle mouse up event to complete cube rotation
-  private handleMouseUp(event: MouseEvent): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private handleMouseUp(_event: MouseEvent): void {
     // Disable mouse interaction with cube faces for now
     return;
   }
@@ -196,13 +198,15 @@ class InputHandler {
   }
   
   // Handle touch move event
-  private handleTouchMove(event: TouchEvent): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private handleTouchMove(_event: TouchEvent): void {
     // Disable touch interaction with cube faces
     return;
   }
   
   // Handle touch end event
-  private handleTouchEnd(event: TouchEvent): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private handleTouchEnd(_event: TouchEvent): void {
     // Disable touch interaction with cube faces
     return;
   }

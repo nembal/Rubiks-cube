@@ -391,7 +391,8 @@ class CubeManager {
   }
 
   // Shuffle the cube with a specified number of random moves
-  shuffleCube(moveCount: number = 25): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  shuffleCube(_moveCount: number = 25): void {
     if (this.state.isAnimating) return;
     
     // Reset the cube first to ensure we start from a solved state

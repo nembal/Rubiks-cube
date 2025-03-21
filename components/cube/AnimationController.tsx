@@ -1,5 +1,5 @@
 import { Object3D, Mesh, Vector3 } from 'three';
-import CubeManager, { Axis, Cubie, Face } from './CubeManager';
+import CubeManager, { Axis, Cubie } from './CubeManager';
 import CubeRenderer from './CubeRenderer';
 
 class AnimationController {

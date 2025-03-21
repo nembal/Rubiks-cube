@@ -3,7 +3,6 @@ import clsx from 'clsx';
 
 interface FancyButtonProps {
   label: string;
-  subtitle?: string;
   isActive?: boolean;
   onClick?: () => void;
   className?: string;
@@ -20,7 +19,6 @@ interface FancyButtonProps {
 
 const FancyButton: React.FC<FancyButtonProps> = ({
   label,
-  subtitle,
   isActive = false,
   onClick,
   className,

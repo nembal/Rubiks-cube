@@ -167,6 +167,8 @@ const CubeScene: React.FC<{
 }> = ({ highlightOptions, onCubeStateChange, onUndo, setInputHandlerRef }) => {
   const { scene, camera } = useThree();
   const clockRef = useRef(new Clock());
+  // Using any type for OrbitControls ref due to type complexity with the drei library
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const orbitControlsRef = useRef<any>(null);
   
   // Refs for our custom components
@@ -196,12 +198,15 @@ const CubeScene: React.FC<{
     });
     
     // Set the orbit controls callback but always force to true
-    inputHandler.setOrbitControlsCallback((enable: boolean) => {
-      if (orbitControlsRef.current) {
-        // Always enable orbit controls regardless of the parameter
-        orbitControlsRef.current.enabled = true;
+    inputHandler.setOrbitControlsCallback(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      (_enable: boolean) => {
+        if (orbitControlsRef.current) {
+          // Always enable orbit controls regardless of the parameter
+          orbitControlsRef.current.enabled = true;
+        }
       }
-    });
+    );
     
     // Ensure orbit controls are enabled right away
     if (orbitControlsRef.current) {
