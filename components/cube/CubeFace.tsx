@@ -3,6 +3,23 @@ import CubeManager, { Face, Axis } from './CubeManager';
 
 class CubeFace {
   private cubeManager: CubeManager;
+  private faceAxisMap: Record<Face, Axis> = {
+    front: 'z',
+    back: 'z',
+    left: 'x',
+    right: 'x',
+    top: 'y',
+    bottom: 'y'
+  };
+  
+  private faceValueMap: Record<Face, number> = {
+    front: 1,
+    back: -1,
+    left: -1,
+    right: 1,
+    top: 1,
+    bottom: -1
+  };
   
   constructor(cubeManager: CubeManager) {
     this.cubeManager = cubeManager;

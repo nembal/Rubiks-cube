@@ -26,7 +26,7 @@ The Rubik’s Cube Learning Application is an interactive, visually appealing we
     * Edge Chamfer: Adjustable from straight edges to near-spherical (ball-like) shapes.
     * Surface Effects: Optional 3D effects or glow on the cube’s surface.
     * Edge Effects: Optional 3D glow or enhancements on individual cubelets and the entire cube.
-* Learn to Cube Section:
+*  Section:
     * Animated tutorials based on badmephisto’s content (e.g., Beginner’s Method, F2L).
     * Step-by-step breakdown with text and actions derived from spoken material.
     * Interactive cube animations to demonstrate moves.

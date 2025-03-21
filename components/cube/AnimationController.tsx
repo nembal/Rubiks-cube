@@ -1,5 +1,5 @@
 import { Object3D, Mesh, Vector3 } from 'three';
-import CubeManager, { Axis, Cubie } from './CubeManager';
+import CubeManager, { Axis, Cubie, Face } from './CubeManager';
 import CubeRenderer from './CubeRenderer';
 
 class AnimationController {
@@ -197,6 +197,85 @@ class AnimationController {
   // Check if animation is in progress
   isAnimating(): boolean {
     return this.animating;
+  }
+  
+  // Shuffle the cube with random moves
+  shuffleCube(moveCount: number = 25, onComplete: () => void = () => {}): void {
+    if (this.animating) return;
+    
+    // Available faces to randomly rotate
+    const faces: Face[] = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+    
+    // Counter for tracking completed moves
+    let completedMoves = 0;
+    
+    // Function to perform a random move
+    const performRandomMove = () => {
+      if (completedMoves >= moveCount) {
+        onComplete();
+        return;
+      }
+      
+      // Pick a random face
+      const randomFaceIndex = Math.floor(Math.random() * faces.length);
+      const face = faces[randomFaceIndex];
+      
+      // Pick a random direction (1 or -1)
+      const direction = Math.random() < 0.5 ? 1 : -1;
+      
+      // Get the axis and value for the given face
+      let axis: Axis = 'x';  // Default initialization
+      let value: number = 0; // Default initialization
+      
+      switch (face) {
+        case 'front':
+          axis = 'z';
+          value = 1;
+          break;
+        case 'back':
+          axis = 'z';
+          value = -1;
+          break;
+        case 'left':
+          axis = 'x';
+          value = -1;
+          break;
+        case 'right':
+          axis = 'x';
+          value = 1;
+          break;
+        case 'top':
+          axis = 'y';
+          value = 1;
+          break;
+        case 'bottom':
+          axis = 'y';
+          value = -1;
+          break;
+      }
+      
+      // Get cubies in the layer
+      const { layer } = this.cubeManager.twistLayer(axis, value, direction, face);
+      
+      // Get the corresponding meshes
+      const meshes = this.cubeRenderer.getCubieMeshesInLayer(axis, value);
+      
+      // Start the animation for this move
+      this.startTwist(layer, meshes, axis, direction, () => {
+        // Update cube state
+        this.cubeManager.setAnimating(false);
+        this.cubeRenderer.updatePositions();
+        
+        // Increment the counter
+        completedMoves++;
+        
+        // Perform the next move
+        performRandomMove();
+      });
+    };
+    
+    // Start the shuffle process
+    performRandomMove();
   }
 }
 

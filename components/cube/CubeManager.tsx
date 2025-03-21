@@ -28,6 +28,8 @@ export type CubeState = {
   currentFace: Face;
   cursor: CursorPosition;
   isAnimating: boolean;
+  isClockwise: boolean; // Added for rotation direction toggle
+  moveHistory: { face: Face, clockwise: boolean }[]; // Track move history
 };
 
 class CubeManager {
@@ -56,6 +58,8 @@ class CubeManager {
       currentFace: 'front',
       cursor: { row: 1, col: 1 }, // Start at center of front face
       isAnimating: false,
+      isClockwise: true, // Default to clockwise rotation
+      moveHistory: [], // Initialize empty move history
     };
   }
 
@@ -224,8 +228,61 @@ class CubeManager {
     });
   }
 
-  // Twist a layer of the cube
-  twistLayer(axis: Axis, value: number, direction: 1 | -1): { layer: Cubie[], axis: Axis, direction: 1 | -1 } {
+  // Toggle rotation direction
+  toggleRotationDirection(): void {
+    this.state.isClockwise = !this.state.isClockwise;
+  }
+
+  // Get current rotation direction
+  isClockwise(): boolean {
+    return this.state.isClockwise;
+  }
+
+  // Get move history
+  getMoveHistory(): { face: Face, clockwise: boolean }[] {
+    return [...this.state.moveHistory];
+  }
+
+  // Add move to history
+  addMoveToHistory(face: Face, clockwise: boolean): void {
+    this.state.moveHistory.push({ face, clockwise });
+  }
+
+  // Reset move history
+  resetMoveHistory(): void {
+    this.state.moveHistory = [];
+  }
+  
+  // Get the last move from history
+  getLastMove(): { face: Face, clockwise: boolean } | null {
+    if (this.state.moveHistory.length === 0) return null;
+    return this.state.moveHistory[this.state.moveHistory.length - 1];
+  }
+  
+  // Undo the last move
+  undoLastMove(): { success: boolean, layer: Cubie[], axis: Axis, value: number, direction: number, face: Face } | { success: boolean } {
+    if (this.state.isAnimating || this.state.moveHistory.length === 0) return { success: false };
+    
+    // Get the last move
+    const lastMove = this.state.moveHistory.pop();
+    if (!lastMove) return { success: false };
+    
+    // Get the axis and value for the given face
+    const axis = this.faceAxisMap[lastMove.face];
+    const value = this.faceValueMap[lastMove.face];
+    
+    // Apply the inverse rotation (flip the clockwise direction)
+    const direction = lastMove.clockwise ? -1 : 1;
+    
+    // Return the layer info for animation
+    const layer = this.getCubiesInLayer(axis, value);
+    this.state.isAnimating = true;
+    
+    return { success: true, layer, axis, value, direction, face: lastMove.face };
+  }
+
+  // Twist a layer of the cube with updated signature to record the move
+  twistLayer(axis: Axis, value: number, direction: 1 | -1, face?: Face): { layer: Cubie[], axis: Axis, direction: 1 | -1 } {
     if (this.state.isAnimating) return { layer: [], axis, direction };
     
     this.state.isAnimating = true;
@@ -233,6 +290,12 @@ class CubeManager {
     // The actual rotation happens in AnimationController
     // Here we just mark which layer is being twisted
     const layer = this.getCubiesInLayer(axis, value);
+    
+    // Record the move in history if a face is provided
+    if (face) {
+      const isClockwise = direction === 1;
+      this.addMoveToHistory(face, isClockwise);
+    }
     
     // Return the layer and set isAnimating to true for animation handling
     return { layer, axis, direction };
@@ -272,6 +335,71 @@ class CubeManager {
   // Set animation status
   setAnimating(isAnimating: boolean): void {
     this.state.isAnimating = isAnimating;
+  }
+
+  // Check if the cube is solved
+  isSolved(): boolean {
+    // Check each face to see if all cubies on that face have the same color
+    const faces: Face[] = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+    
+    for (const face of faces) {
+      const axis = this.faceAxisMap[face];
+      const value = this.faceValueMap[face];
+      
+      // Get all cubies on this face
+      const faceCubies = this.getCubiesInLayer(axis, value);
+      
+      // Get the color we expect for this face
+      let expectedColor = '';
+      switch (face) {
+        case 'front': expectedColor = faceCubies[0]?.color.front || ''; break;
+        case 'back': expectedColor = faceCubies[0]?.color.back || ''; break;
+        case 'left': expectedColor = faceCubies[0]?.color.left || ''; break;
+        case 'right': expectedColor = faceCubies[0]?.color.right || ''; break;
+        case 'top': expectedColor = faceCubies[0]?.color.top || ''; break;
+        case 'bottom': expectedColor = faceCubies[0]?.color.bottom || ''; break;
+      }
+      
+      // Check if all cubies on this face have the same color
+      for (const cubie of faceCubies) {
+        let color = '';
+        switch (face) {
+          case 'front': color = cubie.color.front; break;
+          case 'back': color = cubie.color.back; break;
+          case 'left': color = cubie.color.left; break;
+          case 'right': color = cubie.color.right; break;
+          case 'top': color = cubie.color.top; break;
+          case 'bottom': color = cubie.color.bottom; break;
+        }
+        
+        // If any cubie has a different color, the cube is not solved
+        if (color !== expectedColor) {
+          return false;
+        }
+      }
+    }
+    
+    // If we get here, all faces have cubies with the same color
+    return true;
+  }
+
+  // Reset the cube to its solved state
+  resetCube(): void {
+    this.state.cubies = this.initializeCubies();
+    this.resetMoveHistory();
+    this.state.isAnimating = false;
+  }
+
+  // Shuffle the cube with a specified number of random moves
+  shuffleCube(moveCount: number = 25): void {
+    if (this.state.isAnimating) return;
+    
+    // Reset the cube first to ensure we start from a solved state
+    this.resetCube();
+    
+    // We'll implement the actual shuffle in the AnimationController
+    // So we just mark that a shuffle is needed
+    return;
   }
 }
 
