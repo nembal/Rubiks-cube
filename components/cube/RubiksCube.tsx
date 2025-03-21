@@ -6,6 +6,7 @@ import { OrbitControls } from '@react-three/drei';
 import {
   Clock,
 } from 'three';
+import clsx from 'clsx';
 
 // Import our custom components
 import CubeManager from './CubeManager';
@@ -14,6 +15,7 @@ import CubeFace from './CubeFace';
 import AnimationController from './AnimationController';
 import InputHandler from './InputHandler';
 import Background from './Background';
+import FancyButton from '../ui/FancyButton';
 
 // Define highlight mode options - only cubicle mode now
 export type HighlightMode = 'cubicle';
@@ -29,6 +31,23 @@ export interface HighlightOptions {
 const Timer: React.FC<{ isRunning: boolean; onReset: () => void }> = ({ isRunning, onReset }) => {
   const [time, setTime] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if mobile view on mount and on window resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // Standard breakpoint for mobile
+    };
+    
+    // Initial check
+    checkMobile();
+    
+    // Add resize listener
+    window.addEventListener('resize', checkMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     if (isRunning) {
@@ -56,19 +75,50 @@ const Timer: React.FC<{ isRunning: boolean; onReset: () => void }> = ({ isRunnin
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  return (
-    <div className="absolute top-20 right-4 bg-black bg-opacity-50 text-white px-4 py-2 rounded-md text-2xl font-mono z-20">
-      {formatTime()}
-    </div>
-  );
-};
+  const handleClick = () => {
+    if (!isRunning) {
+      // Simulate 'W' keypress
+      const event = new KeyboardEvent('keydown', {
+        key: 'w',
+        code: 'KeyW',
+        keyCode: 87,
+        which: 87,
+        bubbles: true,
+        cancelable: true
+      });
+      window.dispatchEvent(event);
+      onReset();
+    }
+  };
 
-// Direction indicator component
-const DirectionIndicator: React.FC<{ isClockwise: boolean }> = ({ isClockwise }) => {
+  // Play icon
+  const PlayIcon = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" />
+    </svg>
+  );
+
   return (
-    <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-md">
-      <span className="font-bold mr-2">Direction:</span>
-      <span className="font-mono">{isClockwise ? 'Clockwise ⟳' : 'Counterclockwise ⟲'}</span>
+    <div className={clsx(
+      "absolute z-20", 
+      isMobile ? "top-10 right-2" : "top-20 right-4"
+    )}>
+      <FancyButton
+        label={isRunning ? formatTime() : "Play"}
+        variant="timer"
+        icon={!isRunning ? <PlayIcon /> : undefined}
+        iconSize="large"
+        isMobile={isMobile}
+        isActive={isRunning}
+        isRunningTimer={isRunning}
+        isMonospaceText={isRunning}
+        onClick={!isRunning ? handleClick : undefined}
+        className={isRunning ? "pointer-events-none" : ""}
+      />
     </div>
   );
 };
@@ -76,19 +126,34 @@ const DirectionIndicator: React.FC<{ isClockwise: boolean }> = ({ isClockwise })
 // Control buttons component
 const ControlButtons: React.FC<{ 
   onUndo: () => void; 
-  undoDisabled: boolean; 
-}> = ({ onUndo, undoDisabled }) => {
+  undoDisabled: boolean;
+  isMobile: boolean;
+}> = ({ onUndo, undoDisabled, isMobile }) => {
+  // Undo icon
+  const UndoIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="currentColor"
+    >
+    <path fillRule="evenodd" d="M20.239 3.749a.75.75 0 0 0-.75.75V15H5.549l2.47-2.47a.75.75 0 0 0-1.06-1.06l-3.75 3.75a.75.75 0 0 0 0 1.06l3.75 3.75a.75.75 0 1 0 1.06-1.06L5.55 16.5h14.69a.75.75 0 0 0 .75-.75V4.5a.75.75 0 0 0-.75-.751Z" clipRule="evenodd" />
+  </svg>
+  );
+
   return (
-    <div className="absolute top-20 left-4 flex flex-col gap-2 z-20">
-      <button
-        onClick={onUndo}
-        disabled={undoDisabled}
-        className={`bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md ${
-          undoDisabled ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
-      >
-        Undo
-      </button>
+    <div className={clsx(
+      "absolute z-20", 
+      isMobile ? "top-10 left-2" : "top-20 left-4"
+    )}>
+      <FancyButton
+        label="Undo"
+        variant="undo"
+        onClick={undoDisabled ? undefined : onUndo}
+        isActive={!undoDisabled}
+        icon={<UndoIcon />}
+        iconSize="large"
+        isMobile={isMobile}
+        className={undoDisabled ? 'opacity-50 cursor-not-allowed' : ''}
+      />
     </div>
   );
 };
@@ -236,6 +301,23 @@ const CubeScene: React.FC<{
 const RubiksCube: React.FC = () => {
   // Create a ref to store the InputHandler
   const inputHandlerRef = useRef<InputHandler | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if mobile view on mount and on window resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // Standard breakpoint for mobile
+    };
+    
+    // Initial check
+    checkMobile();
+    
+    // Add resize listener
+    window.addEventListener('resize', checkMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Default highlight options - only cubicle mode
   const [highlightOptions] = useState<HighlightOptions>({
@@ -292,6 +374,27 @@ const RubiksCube: React.FC = () => {
     inputHandlerRef.current = handler;
   }, []);
   
+  // Direction icons
+  const ClockwiseIcon = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path fillRule="evenodd" d="M14.47 2.47a.75.75 0 0 1 1.06 0l6 6a.75.75 0 0 1 0 1.06l-6 6a.75.75 0 1 1-1.06-1.06l4.72-4.72H9a5.25 5.25 0 1 0 0 10.5h3a.75.75 0 0 1 0 1.5H9a6.75 6.75 0 0 1 0-13.5h10.19l-4.72-4.72a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+    </svg>
+  );
+  
+  const CounterClockwiseIcon = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path fillRule="evenodd" d="M9.53 2.47a.75.75 0 0 1 0 1.06L4.81 8.25H15a6.75 6.75 0 0 1 0 13.5h-3a.75.75 0 0 1 0-1.5h3a5.25 5.25 0 1 0 0-10.5H4.81l4.72 4.72a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+    </svg>
+  );
+  
   return (
     <div className="w-full h-full absolute inset-0">
       <Canvas 
@@ -310,24 +413,57 @@ const RubiksCube: React.FC = () => {
       {/* UI Elements */}
       <ControlButtons 
         onUndo={onUndoAction}
-        undoDisabled={!canUndo} 
+        undoDisabled={!canUndo}
+        isMobile={isMobile}
       />
-      <DirectionIndicator isClockwise={isClockwise} />
       <Timer key={timerKey} isRunning={timerRunning} onReset={() => setTimerKey(prev => prev + 1)} />
+      <div className={clsx(
+        "absolute left-2 z-20",
+        isMobile ? "bottom-1" : "bottom-4"
+      )}>
+        <FancyButton
+          label={isClockwise ? 'Clockwise' : 'Counter'}
+          variant="direction"
+          icon={isClockwise ? <ClockwiseIcon /> : <CounterClockwiseIcon />}
+          iconSize="large"
+          isMobile={isMobile}
+          isActive={true}
+          onClick={() => {
+            // Simulate spacebar press
+            const event = new KeyboardEvent('keydown', {
+              key: ' ',
+              code: 'Space',
+              keyCode: 32,
+              which: 32,
+              bubbles: true,
+              cancelable: true
+            });
+            window.dispatchEvent(event);
+            setIsClockwise(!isClockwise);
+          }}
+        />
+      </div>
       
       {/* Keyboard Controls Info */}
-      <div className="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white p-3 rounded-md text-sm">
-        <h3 className="font-bold mb-1">Controls:</h3>
-        <ul className="space-y-1">
-          <li><span className="font-mono bg-gray-800 px-1 rounded">W</span> - Rotate top face</li>
-          <li><span className="font-mono bg-gray-800 px-1 rounded">A</span> - Rotate left face</li>
-          <li><span className="font-mono bg-gray-800 px-1 rounded">S</span> - Rotate bottom face</li>
-          <li><span className="font-mono bg-gray-800 px-1 rounded">D</span> - Rotate right face</li>
-          <li><span className="font-mono bg-gray-800 px-1 rounded">E</span> - Rotate front face</li>
-          <li><span className="font-mono bg-gray-800 px-1 rounded">Q</span> - Rotate back face</li>
-          <li><span className="font-mono bg-gray-800 px-1 rounded">Space</span> - Toggle direction</li>
-          <li><span className="font-mono bg-gray-800 px-1 rounded">Shift</span> - Undo last move</li>
-          <li>Mouse drag - Orbit view</li>
+      <div className={clsx(
+        "absolute right-2 bg-black bg-opacity-50 text-white rounded-md",
+        isMobile ? "bottom-1 p-1 text-[8px]" : "bottom-4 p-3 text-sm"
+      )}>
+        <h3 className="font-bold mb-0.5">Controls:</h3>
+        <ul className="space-y-0.5">
+          <li><span className="font-mono bg-gray-800 px-1 rounded">W</span> - Top face</li>
+          <li><span className="font-mono bg-gray-800 px-1 rounded">A</span> - Left face</li>
+          <li><span className="font-mono bg-gray-800 px-1 rounded">S</span> - Bottom face</li>
+          <li><span className="font-mono bg-gray-800 px-1 rounded">D</span> - Right face</li>
+          {!isMobile && (
+            <>
+              <li><span className="font-mono bg-gray-800 px-1 rounded">E</span> - Front face</li>
+              <li><span className="font-mono bg-gray-800 px-1 rounded">Q</span> - Back face</li>
+            </>
+          )}
+          <li><span className="font-mono bg-gray-800 px-1 rounded">Space</span> - Direction</li>
+          <li><span className="font-mono bg-gray-800 px-1 rounded">Shift</span> - Undo move</li>
+          {!isMobile && <li>Mouse drag - Orbit view</li>}
         </ul>
       </div>
     </div>
