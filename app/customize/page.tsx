@@ -6,19 +6,19 @@ export default function CustomizePage() {
       <section className="w-full max-w-5xl">
         <h1 className="text-4xl font-bold mb-6 text-center">Customize Your Cube</h1>
         <p className="text-lg mb-10 text-center">
-          Personalize your Rubik's cube with various visual effects and settings
+          Personalize your Rubik&apos;s cube with various visual effects and settings
         </p>
         
         {/* Coming Soon Banner */}
         <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 mb-12 text-center">
           <h2 className="text-2xl font-bold mb-4">Customization Coming Soon!</h2>
           <p className="mb-6">
-            We're working hard to bring you amazing customization options. Check back soon to personalize your cube with these features:
+            We&apos;re working hard to bring you amazing customization options. Check back soon to personalize your cube with these features:
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div className="bg-background rounded-lg p-4 shadow-sm">
               <h3 className="font-semibold mb-2">Edge Chamfering</h3>
-              <p className="text-sm">Adjust the roundness of your cube's edges from sharp to spherical</p>
+              <p className="text-sm">Adjust the roundness of your cube&apos;s edges from sharp to spherical</p>
             </div>
             <div className="bg-background rounded-lg p-4 shadow-sm">
               <h3 className="font-semibold mb-2">Surface Effects</h3>

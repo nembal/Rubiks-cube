@@ -2,7 +2,7 @@ import {
   Scene, 
   BoxGeometry, 
   Mesh, 
-  MeshLambertMaterial,
+  MeshStandardMaterial,
   Group
 } from 'three';
 import CubeManager, { Cubie } from './CubeManager';
@@ -14,8 +14,8 @@ class CubeRenderer {
   private cubeMeshes: Mesh[] = [];
   private cubeGroup: Group;
   private spacing: number = 1.05; // Spacing between cubies
-  private selectedMaterial: MeshLambertMaterial;
-  private defaultMaterials: Record<string, MeshLambertMaterial>;
+  private selectedMaterial: MeshStandardMaterial;
+  private defaultMaterials: Record<string, MeshStandardMaterial>;
   private highlightOptions: HighlightOptions;
   private highlightedObjects: Mesh[] = []; // Track highlighted objects for removal
   
@@ -28,19 +28,21 @@ class CubeRenderer {
     
     // Create materials
     this.defaultMaterials = {
-      right: new MeshLambertMaterial({ color: 0xff0000 }), // Red
-      left: new MeshLambertMaterial({ color: 0xff8000 }),  // Orange
-      top: new MeshLambertMaterial({ color: 0xffffff }),   // White
-      bottom: new MeshLambertMaterial({ color: 0xffff00 }), // Yellow
-      front: new MeshLambertMaterial({ color: 0x00ff00 }),  // Green
-      back: new MeshLambertMaterial({ color: 0x0000ff }),   // Blue
-      black: new MeshLambertMaterial({ color: 0x333333 }),  // Black for inner faces
+      right: new MeshStandardMaterial({ color: 0xff0000, roughness: 0.3, metalness: 0 }), // Red
+      left: new MeshStandardMaterial({ color: 0xff8000, roughness: 0.3, metalness: 0 }),  // Orange
+      top: new MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, metalness: 0 }),   // White
+      bottom: new MeshStandardMaterial({ color: 0xffff00, roughness: 0.3, metalness: 0 }), // Yellow
+      front: new MeshStandardMaterial({ color: 0x00ff00, roughness: 0.3, metalness: 0 }),  // Green
+      back: new MeshStandardMaterial({ color: 0x0000ff, roughness: 0.3, metalness: 0 }),   // Blue
+      black: new MeshStandardMaterial({ color: 0x333333, roughness: 0.5, metalness: 0 }),  // Black for inner faces
     };
     
-    this.selectedMaterial = new MeshLambertMaterial({ 
+    this.selectedMaterial = new MeshStandardMaterial({ 
       color: parseInt(this.highlightOptions.color.replace('#', '0x')), 
       transparent: true,
-      opacity: this.highlightOptions.opacity
+      opacity: this.highlightOptions.opacity,
+      roughness: 0.3,
+      metalness: 0
     });
     
     // Initialize highlight materials
@@ -93,6 +95,9 @@ class CubeRenderer {
       // Position the mesh
       const pos = cubie.rubikPosition.clone().multiplyScalar(this.spacing);
       mesh.position.copy(pos);
+      
+      // Enable shadow casting
+      mesh.castShadow = true;
       
       // Add to the group
       this.cubeGroup.add(mesh);

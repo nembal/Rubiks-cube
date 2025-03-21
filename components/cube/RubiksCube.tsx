@@ -4,11 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import {
-  Scene,
-  PerspectiveCamera,
   Clock,
-  Vector3,
-  Group
 } from 'three';
 
 // Import our custom components
@@ -17,6 +13,7 @@ import CubeRenderer from './CubeRenderer';
 import CubeFace from './CubeFace';
 import AnimationController from './AnimationController';
 import InputHandler from './InputHandler';
+import Background from './Background';
 
 // Define highlight mode options - only cubicle mode now
 export type HighlightMode = 'cubicle';
@@ -32,7 +29,6 @@ export interface HighlightOptions {
 const CubeScene: React.FC<{ highlightOptions: HighlightOptions }> = ({ highlightOptions }) => {
   const { scene, camera } = useThree();
   const clockRef = useRef(new Clock());
-  const pivotRef = useRef(new Group());
   
   // Refs for our custom components
   const cubeManagerRef = useRef<CubeManager | undefined>(undefined);
@@ -102,12 +98,20 @@ const CubeScene: React.FC<{ highlightOptions: HighlightOptions }> = ({ highlight
   
   return (
     <>
-      {/* Lights */}
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 10, 7]} intensity={0.8} />
+      {/* Background and lighting */}
+      <Background planeSize={200} shadowOpacity={0.3} />
       
       {/* OrbitControls for camera manipulation */}
-      <OrbitControls enableDamping dampingFactor={0.1} />
+      <OrbitControls 
+        enableDamping 
+        dampingFactor={0.08} 
+        enableZoom={false}
+        enableRotate={true}
+        rotateSpeed={0.7}
+        minDistance={6}
+        maxDistance={20}
+        enablePan={false}
+      />
       
       {/* This is where our cubies will be rendered by CubeRenderer */}
     </>
@@ -124,12 +128,14 @@ const RubiksCube: React.FC = () => {
   });
   
   return (
-    <div className="w-full aspect-square">
-      <Canvas camera={{ position: [5, 5, 5], fov: 75 }}>
+    <div className="w-full h-full absolute inset-0">
+      <Canvas 
+        camera={{ position: [8, 6, 8], fov: 50 }}
+        shadows
+        dpr={[1, 2]} // Responsive pixel ratio for better performance
+      >
         <CubeScene highlightOptions={highlightOptions} />
       </Canvas>
-      
-      {/* No UI buttons needed since there's only one mode */}
     </div>
   );
 };

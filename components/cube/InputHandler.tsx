@@ -1,4 +1,4 @@
-import CubeManager, { CubeState, Face, Axis } from './CubeManager';
+import CubeManager, { CubeState } from './CubeManager';
 import CubeFace from './CubeFace';
 import AnimationController from './AnimationController';
 import CubeRenderer from './CubeRenderer';

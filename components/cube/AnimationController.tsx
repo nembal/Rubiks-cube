@@ -1,4 +1,4 @@
-import { Object3D, Group, Mesh, Vector3 } from 'three';
+import { Object3D, Mesh, Vector3 } from 'three';
 import CubeManager, { Axis, Cubie } from './CubeManager';
 import CubeRenderer from './CubeRenderer';
 
@@ -19,6 +19,14 @@ class AnimationController {
     this.cubeManager = cubeManager;
     this.cubeRenderer = cubeRenderer;
     this.pivot = new Object3D();
+    
+    // Make sure the pivot and its children cast shadows
+    this.pivot.traverse((object) => {
+      if (object instanceof Mesh) {
+        object.castShadow = true;
+      }
+    });
+    
     this.reset();
   }
   
@@ -75,6 +83,9 @@ class AnimationController {
       // Store original parent and position
       const originalParent = mesh.parent;
       const originalPosition = mesh.position.clone();
+      
+      // Ensure the mesh casts shadows
+      mesh.castShadow = true;
       
       // Add to pivot
       this.pivot.attach(mesh);

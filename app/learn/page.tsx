@@ -6,15 +6,15 @@ export default function LearnPage() {
       <section className="w-full max-w-5xl">
         <h1 className="text-4xl font-bold mb-6 text-center">Learn to Cube</h1>
         <p className="text-lg mb-10 text-center">
-          Master the Rubik's cube with our interactive tutorials based on badmephisto's method
+          Master the Rubik&apos;s cube with our interactive tutorials based on badmephisto&apos;s method
         </p>
         
         {/* Tutorial Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           <div className="bg-black/5 dark:bg-white/5 p-6 rounded-lg">
-            <h2 className="text-2xl font-bold mb-4">Beginner's Method</h2>
+            <h2 className="text-2xl font-bold mb-4">Beginner&apos;s Method</h2>
             <p className="mb-4">
-              Learn the basic solve method with layer-by-layer techniques. Perfect for those who are new to the Rubik's cube.
+              Learn the basic solve method with layer-by-layer techniques. Perfect for those who are new to the Rubik&apos;s cube.
             </p>
             <p className="text-muted-foreground italic mb-4">Coming soon!</p>
             <div className="grid grid-cols-2 gap-4">
