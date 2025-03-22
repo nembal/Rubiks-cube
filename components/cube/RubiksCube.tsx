@@ -105,7 +105,7 @@ const Timer: React.FC<{ isRunning: boolean; onReset: () => void }> = ({ isRunnin
   return (
     <div className={clsx(
       "absolute z-20", 
-      isMobile ? "top-10 right-2" : "top-20 right-4"
+      isMobile ? "top-10 right-2" : "top-20 right-2"
     )}>
       <FancyButton
         label={isRunning ? formatTime() : "Play"}
@@ -142,7 +142,7 @@ const ControlButtons: React.FC<{
   return (
     <div className={clsx(
       "absolute z-20", 
-      isMobile ? "top-10 left-2" : "top-20 left-4"
+      isMobile ? "top-10 left-2" : "top-20 left-2"
     )}>
       <FancyButton
         label="Undo"
